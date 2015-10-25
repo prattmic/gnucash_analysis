@@ -6,6 +6,24 @@ import datetime
 import gnucash
 import pandas as pd
 
+account_types = {
+    gnucash.ACCT_TYPE_ASSET: "Asset",
+    gnucash.ACCT_TYPE_BANK: "Bank",
+    gnucash.ACCT_TYPE_CASH: "Cash",
+    gnucash.ACCT_TYPE_CHECKING: "Checking",
+    gnucash.ACCT_TYPE_CREDIT: "Credit",
+    gnucash.ACCT_TYPE_EQUITY: "Equity",
+    gnucash.ACCT_TYPE_EXPENSE: "Expense",
+    gnucash.ACCT_TYPE_INCOME: "Income",
+    gnucash.ACCT_TYPE_LIABILITY: "Liability",
+    gnucash.ACCT_TYPE_MUTUAL: "Mutual",
+    gnucash.ACCT_TYPE_PAYABLE: "Payable",
+    gnucash.ACCT_TYPE_RECEIVABLE: "Receivable",
+    gnucash.ACCT_TYPE_ROOT: "Root",
+    gnucash.ACCT_TYPE_STOCK: "Stock",
+    gnucash.ACCT_TYPE_TRADING: "Trading",
+}
+
 def all_accounts(root):
     """Get all gnucash Accounts,
 
@@ -46,14 +64,17 @@ def splits_dataframe(gnc_file):
         splits = []
 
         for account in accounts:
+            name = account.name
+            typ = account_types[account.GetType()]
+
             for split in account.GetSplitList():
                 transaction = split.GetParent()
                 date = datetime.date.fromtimestamp(transaction.GetDate())
                 description = transaction.GetDescription()
                 amount = split.GetAmount().to_double()
-                splits.append((account.name, date, description, amount))
+                splits.append((name, typ, date, description, amount))
 
-        return pd.DataFrame(splits, columns=['account', 'date',
+        return pd.DataFrame(splits, columns=['account', 'type', 'date',
                                              'description', 'amount'])
     finally:
         session.end()
