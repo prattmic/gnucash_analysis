@@ -1,0 +1,12 @@
+Scripts for analyzing GnuCash transactions
+
+gnucash_pandas.py helps load GnuCash data into Pandas, where in depth analysis
+can be done.
+
+An example IPython Notebook plots 31-day moving expenses.
+
+Requirements:
+
+* GnuCash Python Bindings (python-gnucash)
+* Pandas
+* Numpy
