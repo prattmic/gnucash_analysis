@@ -4,6 +4,7 @@ from __future__ import print_function
 import argparse
 import datetime
 import gnucash
+import numpy as np
 import pandas as pd
 
 account_types = {
@@ -79,6 +80,24 @@ def splits_dataframe(gnc_file):
     finally:
         session.end()
         session.destroy()
+
+def daily(df, account_type):
+    """DataFrame of daily totals in each account.
+
+    Args:
+        df: DataFrame in format returned by splits_dataframe
+        account_type: Only include accounts of this type
+
+    Returns:
+        DataFrame indexed by date, with a column for each account. Each value
+        is the transaction total for that account that day.
+    """
+    df = df[df['type'] == account_type]
+    df = pd.pivot_table(df, index=pd.DatetimeIndex(df['date']),
+                        columns='account', values='amount', aggfunc=np.sum)
+    df = df.resample('D')
+    df = df.fillna(0)
+    return df
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='GNUCash expense moving average')
