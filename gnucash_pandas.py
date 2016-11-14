@@ -6,6 +6,7 @@ import datetime
 import gnucash
 import numpy as np
 import pandas as pd
+import time
 
 account_types = {
     gnucash.ACCT_TYPE_ASSET: "Asset",
@@ -98,6 +99,54 @@ def daily(df, account_type):
     df = df.resample('D')
     df = df.fillna(0)
     return df
+
+def balances_dataframe(gnc_file, start, end):
+    """Get GnuCash daily account balances as Pandas DataFrame.
+
+    All balances are in USD.
+
+    Args:
+        gnc_file: GnuCash source file.
+        start: datetime.date first day to include.
+        end: datetime.date last day to include.
+
+    Returns:
+        DataFrame with USD balance from each account.
+    """
+    dates = []
+    curr = start
+    while curr < end:
+        dates.append(curr)
+        curr += datetime.timedelta(days=1)
+
+    session = gnucash.Session(gnc_file)
+
+    try:
+        book = session.get_book()
+
+        usd = book.get_table().lookup("CURRENCY", "USD")
+
+        root = book.get_root_account()
+        accounts = all_accounts(root)
+
+        balances = []
+
+        for account in accounts:
+            # TODO(prattmic): Full name in splits_dataframe
+            name = account.get_full_name()
+            typ = account_types[account.GetType()]
+
+            for date in dates:
+                t = time.mktime(date.timetuple())
+                # Third argument is whether to include child accounts.
+                balance = account.GetBalanceAsOfDateInCurrency(t, usd, False).to_double()
+                balances.append((name, typ, date, balance))
+
+        return pd.DataFrame(balances, columns=['account', 'type', 'date',
+                                               'balance'])
+    finally:
+        session.end()
+        session.destroy()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='GNUCash expense moving average')
