@@ -96,8 +96,7 @@ def daily(df, account_type):
     df = df[df['type'] == account_type]
     df = pd.pivot_table(df, index=pd.DatetimeIndex(df['date']),
                         columns='account', values='amount', aggfunc=np.sum)
-    df = df.resample('D')
-    df = df.fillna(0)
+    df = df.resample('D').sum()
     return df
 
 def balances_dataframe(gnc_file, start, end):
