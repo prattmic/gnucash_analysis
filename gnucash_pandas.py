@@ -71,7 +71,7 @@ def splits_dataframe(gnc_file):
 
             for split in account.GetSplitList():
                 transaction = split.GetParent()
-                date = datetime.date.fromtimestamp(transaction.GetDate())
+                date = transaction.GetDate()
                 description = transaction.GetDescription()
                 amount = split.GetAmount().to_double()
                 splits.append((name, typ, date, description, amount))
